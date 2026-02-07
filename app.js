@@ -133,12 +133,14 @@ async function startBinding() {
   if ("NDEFReader" in window) {
     try {
       const ndef = new NDEFReader();
+      const payload = buildPayload();
+      const data = new TextEncoder().encode(JSON.stringify(payload));
       await ndef.write({
         records: [
           {
             recordType: "mime",
             mediaType: "application/json",
-            data: JSON.stringify(buildPayload()),
+            data,
           },
         ],
       });
@@ -182,6 +184,15 @@ usernameInput.addEventListener("input", handleInputChange);
 passwordInput.addEventListener("input", handleInputChange);
 
 // Initialize app state on load.
+const isWebNfcSupported = "NDEFReader" in window;
+if (!isWebNfcSupported) {
+  startNfcBtn.disabled = true;
+  updateStatus(
+    "This browser does not support Web NFC. Use Android Chrome or Edge.",
+    false
+  );
+}
+
 state.currentUser = loadUser();
 if (state.currentUser) {
   currentUserName.textContent = state.currentUser.userName;
