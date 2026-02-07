@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NFC Binding Prototype (Web)</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="app__header">
+        <h1>NFC Binding Prototype (Web)</h1>
+        <p class="muted">Local mock flow for a course demo</p>
+      </header>
+
+      <section id="loginView" class="card">
+        <h2>Mock Login</h2>
+        <label>
+          Username
+          <input id="username" type="text" placeholder="Enter username" autocomplete="off" />
+        </label>
+        <label>
+          Password
+          <input id="password" type="password" placeholder="Enter password" />
+        </label>
+        <button id="loginBtn" class="primary" disabled>Login</button>
+      </section>
+
+      <section id="mainView" class="card hidden">
+        <div class="welcome">
+          <span>Welcome</span>
+          <strong id="currentUserName">User</strong>
+        </div>
+        <button id="startNfcBtn" class="primary large">Start NFC Binding</button>
+        <div id="status" class="status">Ready to start NFC binding.</div>
+        <div class="actions">
+          <button id="logoutBtn" class="secondary">Logout</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
