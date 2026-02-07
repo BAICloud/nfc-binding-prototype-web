@@ -6,6 +6,7 @@ const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const startNfcBtn = document.getElementById("startNfcBtn");
 const statusEl = document.getElementById("status");
+const loginStatusEl = document.getElementById("loginStatus");
 const currentUserName = document.getElementById("currentUserName");
 
 const STORAGE_KEY = "mock.currentUser";
@@ -62,6 +63,13 @@ function updateStatus(message, isSuccess) {
   statusEl.classList.add(isSuccess ? "success" : "error");
 }
 
+function updateLoginStatus(message, isSuccess) {
+  if (!loginStatusEl) return;
+  loginStatusEl.textContent = message;
+  loginStatusEl.classList.remove("hidden", "success", "error");
+  loginStatusEl.classList.add(isSuccess ? "success" : "error");
+}
+
 function showLogin() {
   loginView.classList.remove("hidden");
   mainView.classList.add("hidden");
@@ -84,7 +92,7 @@ function mockLogin() {
   );
 
   if (!match) {
-    updateStatus("Login failed: username or password incorrect.", false);
+    updateLoginStatus("Login failed: username or password incorrect.", false);
     return;
   }
 
@@ -99,6 +107,9 @@ function mockLogin() {
   updateStatus("Ready to start NFC binding.", true);
   showMain();
   renderUserProfile();
+  if (loginStatusEl) {
+    loginStatusEl.classList.add("hidden");
+  }
 }
 
 function mockLogout() {
@@ -108,6 +119,9 @@ function mockLogout() {
   passwordInput.value = "";
   handleInputChange();
   showLogin();
+  if (loginStatusEl) {
+    loginStatusEl.classList.add("hidden");
+  }
 }
 
 function buildPayload() {
