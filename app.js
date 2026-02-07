@@ -14,6 +14,8 @@ const STORAGE_KEY = "mock.currentUser";
 const state = {
   currentUser: null,
   currentToken: null,
+  isWriting: false,
+  writeAbortController: null,
 };
 
 const mockUsers = [
@@ -61,6 +63,20 @@ function updateStatus(message, isSuccess) {
   statusEl.textContent = message;
   statusEl.classList.remove("success", "error");
   statusEl.classList.add(isSuccess ? "success" : "error");
+  startNfcBtn.classList.remove("success", "error");
+  startNfcBtn.classList.add(isSuccess ? "success" : "error");
+}
+
+function setWriteState(isWriting) {
+  state.isWriting = isWriting;
+  if (isWriting) {
+    startNfcBtn.textContent = "Stop Writing";
+    startNfcBtn.classList.remove("success");
+    startNfcBtn.classList.add("error");
+  } else {
+    startNfcBtn.textContent = "Start NFC Binding";
+    startNfcBtn.classList.remove("error");
+  }
 }
 
 function updateLoginStatus(message, isSuccess) {
@@ -140,16 +156,34 @@ async function startBinding() {
     updateStatus("Please login before starting NFC binding.", false);
     return;
   }
+
+  if (!("NDEFReader" in window)) {
+    updateStatus("This browser does not support Web NFC. Use Android Chrome or Edge.", false);
+    return;
+  }
+
+  if (state.isWriting) {
+    if (state.writeAbortController) {
+      state.writeAbortController.abort();
+    }
+    setWriteState(false);
+    updateStatus("Write canceled.", false);
+    return;
+  }
+
   state.currentToken = crypto.randomUUID();
-  updateStatus("NFC session started. Ready to scan.", true);
+  setWriteState(true);
+  updateStatus("Please hold your phone near the NFC tag to write.", true);
 
   // Web NFC is only supported on some Android devices and Chrome-based browsers.
-  if ("NDEFReader" in window) {
-    try {
-      const ndef = new NDEFReader();
-      const payload = buildPayload();
-      const data = new TextEncoder().encode(JSON.stringify(payload));
-      await ndef.write({
+  try {
+    const ndef = new NDEFReader();
+    const payload = buildPayload();
+    const data = new TextEncoder().encode(JSON.stringify(payload));
+    state.writeAbortController = new AbortController();
+
+    await ndef.write(
+      {
         records: [
           {
             recordType: "mime",
@@ -157,26 +191,19 @@ async function startBinding() {
             data,
           },
         ],
-      });
-
-      updateStatus("NFC write success!", true);
-      state.currentToken = null;
-      return;
-    } catch (error) {
-      updateStatus(`NFC write failed: ${error.message}`, false);
-      state.currentToken = null;
-      return;
-    }
-  }
-
-  // Fallback: mock a successful write when Web NFC isn't available.
-  setTimeout(() => {
-    updateStatus(
-      "Web NFC not available in this browser. Mock write completed (no tag needed).",
-      true
+      },
+      { signal: state.writeAbortController.signal }
     );
+
+    updateStatus("Write successful.", true);
     state.currentToken = null;
-  }, 600);
+  } catch (error) {
+    updateStatus(`Write failed: ${error.message}`, false);
+    state.currentToken = null;
+  } finally {
+    state.writeAbortController = null;
+    setWriteState(false);
+  }
 }
 
 function renderUserProfile() {
